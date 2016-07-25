@@ -1,0 +1,388 @@
+/*
+task compile << {
+println 'compiling source'
+}
+task compileTest(dependsOn: compile) << {
+
+println 'compiling unit tests'
+}
+task test(dependsOn: [compile, compileTest]) << {
+println 'running unit tests'
+}
+task dist(dependsOn: [compile, test]) << {
+println 'building the distribution'
+}
+
+*/
+
+//gradle dist test
+//gradle dist -x test
+//gradle di
+//gradle -b another.gradle hello
+//gradle -q -p subdir hello
+//gradle -q projects
+//gradle -q tasks
+//gradle -q tasks --all
+//gradle -q help --task libs
+//gradle dependencies
+//gradle test --profile
+
+//gradle wrapper --gradle-version 2.0
+//gradlew test
+//gradle --stop
+
+
+
+//gradle script
+task hello {
+  doLast {
+  println 'Hello world!'
+  }
+}
+//gradle -q hello
+
+task hello1 << {
+println 'Hello world!'
+}
+
+task upper << {
+String someString = 'mY_nAmE'
+println "Original: " + someString
+println "Upper case: " + someString.toUpperCase()
+}
+
+task count << {
+4.times { print "$it " }
+}
+
+//dependence
+task hello2 << {
+println 'Hello world!'
+}
+task intro(dependsOn: hello2) << {
+println "I'm Gradle"
+}
+
+task taskX(dependsOn: 'taskY') << {
+println 'taskX'
+}
+task taskY << {
+println 'taskY'
+}
+
+//dynamic task
+4.times { counter ->
+task "task$counter" << {
+println "I'm task number $counter"
+}
+}
+
+task0.dependsOn task1,task2, task3
+
+
+task0.doFirst {
+println 'Hello Venus'
+}
+task0.doLast {
+println 'Hello Mars'
+}
+task0 << {
+println 'Hello Jupiter'
+}
+//
+task myTask {
+ext.myProperty = "myValue"
+}
+task printTaskProperties << {
+println myTask.myProperty
+}
+
+//ant build
+task loadfile << {
+def files = file('../gradle').listFiles().sort()
+files.each { File file ->
+if (file.isFile()) {
+ant.loadfile(srcFile: file, property: file.name)
+println " *** $file.name ***"
+println "${ant.properties[file.name]}"
+}
+}
+}
+
+//method
+task checksum << {
+fileList('../gradle').each {File file ->
+ant.checksum(file: file, property: "cs_$file.name")
+println "$file.name Checksum: ${ant.properties["cs_$file.name"]}"
+}
+}
+task loadfile1 << {
+fileList('../gradle').each {File file ->
+ant.loadfile(srcFile: file, property: file.name)
+println "I'm fond of $file.name"
+}
+}
+File[] fileList(String dir) {
+file(dir).listFiles({file -> file.isFile() } as FileFilter).sort()
+}
+
+//default task
+defaultTasks 'clean', 'run'
+task clean << {
+println 'Default Cleaning!'
+}
+task run << {
+println 'Default Running!'
+}
+task other << {
+println "I'm not a default task!"
+}
+
+//config by DAG
+task distribution << {
+println "We build the zip with version=$version"
+}
+task release(dependsOn: 'distribution') << {
+println "We release now, the version=$version"
+}
+gradle.taskGraph.whenReady {taskGraph ->
+if (taskGraph.hasTask(release)) {
+version = '1.0'
+} else {
+version = '1.0-SNAPSHOT'
+}
+}
+
+//init plugin(java-library ,scala-library,groovy-library,basic”)
+/*gradle init --type java-library
+gradle init --type java-library --test-framework spock
+gradle init --type java-library --test-framework testng*/
+
+/*writing building script*/
+println name
+println project.name
+//gradle -q check
+
+//project propertys
+println "project:$project"
+println "project.name:$project.name"
+println "project.path:$project.path"
+println "project.description:$project.description"
+println "project.projectDir:$project.projectDir"
+println "project.buildDir:$project.buildDir"
+println "project.group:$project.group"
+println "project.version:$project.version"
+println "project.ant:$project.ant"
+
+//Loacal var
+def dest = "dest"
+task copy(type: Copy) {
+from "source"
+into dest
+}
+
+apply plugin: "java"
+ext {
+springVersion = "3.1.0.RELEASE"
+emailNotification = "build@master.org"
+}
+sourceSets.all { ext.purpose = null }
+sourceSets {
+main {
+purpose = "production"
+}
+test {
+purpose = "test"
+}
+plugin {
+purpose = "production"
+}
+}
+task printProperties << {
+println springVersion
+println emailNotification
+sourceSets.matching { it.purpose == "production" }.each { println it.name }
+}
+
+task configure << {
+def pos = configure(new java.text.FieldPosition(10)) {
+beginIndex = 1
+endIndex = 5
+}
+println pos.beginIndex
+println pos.endIndex
+}
+
+
+task configure1 << {
+def pos = new java.text.FieldPosition(10)
+// Apply the script
+apply from: 'other.gradle', to: pos
+println pos.beginIndex
+println pos.endIndex
+}
+
+//groovy jdk
+task itrator{
+  configurations.runtime.each { File f -> println f }
+}
+
+//access property
+// Using a getter method
+println project.buildDir
+println getProject().getBuildDir()
+// Using a setter method
+project.buildDir = 'target'
+getProject().setBuildDir('target')
+
+//
+test.systemProperty 'some.prop', 'value'
+test.systemProperty('some.prop', 'value')
+
+/*map and list literal*/
+// List literal
+test.includes = ['org/gradle/api/**', 'org/gradle/internal/**']
+List<String> list = new ArrayList<String>()
+list.add('org/gradle/api/**')
+list.add('org/gradle/internal/**')
+test.includes = list
+// Map literal.
+Map<String, String> map = [key1:'value1', key2: 'value2']
+// Groovy will coerce named arguments
+// into a single map argument
+apply plugin: 'java'
+
+/*closure on last parameters*/
+repositories {
+println "in a closure"
+}
+repositories() { println "in a closure" }
+repositories({ println "in a closure" })
+
+/*closure delegates*/
+dependencies {
+assert delegate == project.dependencies
+testCompile('junit:junit:4.12')
+delegate.testCompile('junit:junit:4.12')
+}
+
+//gradle default import
+/*more about tasks*/
+//defined task
+task(hello11) << {
+println "hello"
+}
+task(copy0, type: Copy) {
+from(file('srcDir'))
+into(buildDir)
+}
+
+task('hello12') <<
+{
+println "hello"
+}
+task('copy2', type: Copy) {
+from(file('srcDir'))
+into(buildDir)
+}
+tasks.create(name: 'hello13') << {
+println "hello"
+}
+tasks.create(name: 'copy3', type: Copy) {
+from(file('srcDir'))
+into(buildDir)
+}
+
+//locating tasks
+task hellop
+println hellop.name
+println project.hellop.name
+
+task helloc
+println tasks.helloc.name
+println tasks['helloc'].name
+
+/*project(':projectA') {
+task hello
+}*/
+task hello14
+println tasks.getByPath('hello14').path
+println tasks.getByPath(':hello14').path
+/*
+println tasks.getByPath('projectA:hello').path
+println tasks.getByPath(':projectA:hello').path
+*/
+
+//configuring task
+
+task myCopy1(type: Copy)
+
+Copy myCopy2 = task(myCopy, type: Copy)
+myCopy2.from 'resources'
+myCopy2.into 'target'
+myCopy2.include('**/*.txt', '**/*.xml', '**/*.properties')
+
+task myCopy3(type: Copy)
+myCopy3 {
+from 'resources'
+into 'target'
+include('**/*.txt', '**/*.xml', '**/*.properties')
+}
+
+task copy4(type: Copy) {
+from 'resources'
+into 'target'
+include('**/*.txt', '**/*.xml', '**/*.properties')
+}
+
+//add dependence to task
+/*
+project('projectA') {
+task taskX(dependsOn: ':projectB:taskY') << {
+println 'taskX'
+}
+}
+project('projectB') {
+task taskY << {
+println 'taskY'
+}
+}
+*/
+
+task taskS << {
+println 'taskS'
+}
+task taskT << {
+println 'taskT'
+}
+taskS.dependsOn taskT
+
+taskS.dependsOn {
+tasks.findAll { task -> task.name.startsWith('lib') }
+}
+task lib1 << {
+println 'lib1'
+}
+task lib2 << {
+println 'lib2'
+}
+task notALib << {
+println 'notALib'
+}
+
+//ordering task
+task taskA << {
+println 'taskA'
+}
+task taskB << {
+println 'taskB'
+}
+taskB.mustRunAfter taskA
+taskB.shouldRunAfter taskA
+
+task taskC << {
+println 'taskC'
+}
+taskA.dependsOn taskB
+taskB.dependsOn taskC
+taskC.shouldRunAfter taskA
